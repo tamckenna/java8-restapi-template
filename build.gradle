@@ -1,0 +1,79 @@
+// Gradle plugins DSL standard
+plugins {
+    id 'java'
+    id 'war'
+    // Can enable jacoco but need to disable Clover
+    //id 'jacoco'
+    id 'eclipse'
+    id 'idea'
+    id 'pmd'
+    id 'org.springframework.boot' version '2.2.5.RELEASE'
+    id 'io.spring.dependency-management' version '1.0.9.RELEASE'
+    id "com.github.spotbugs" version "4.0.2"
+    id "com.bmuschko.clover" version "2.2.5"
+}
+
+// Gradle project configurations
+configurations { developmentOnly; runtimeClasspath { extendsFrom developmentOnly } }
+group = projectGroup                                       
+version = projectVersion
+sourceCompatibility = projectSourceCompatibility
+targetCompatibility = projectTargetCompatibility
+bootJar { archiveFileName = "${archiveBaseName.get()}.${archiveExtension.get()}" }
+bootWar { archiveFileName = "${archiveBaseName.get()}.${archiveExtension.get()}" }
+repositories { mavenCentral() ; maven { url "${customMavenRepoUrl}" } }
+configurations { developmentOnly ; runtimeClasspath { extendsFrom developmentOnly } }
+
+// Application dependencies
+dependencies {
+    // Spring dependencies
+    implementation 'org.springframework.boot:spring-boot-starter-web'
+    implementation 'org.springframework.boot:spring-boot-starter-webflux'
+    implementation 'org.springframework.boot:spring-boot-starter-batch'
+    implementation 'org.springframework.boot:spring-boot-starter-jdbc'
+    implementation 'org.springframework.boot:spring-boot-starter-security'
+
+    // Database dependencies
+    //implementation 'mysql:mysql-connector-java:8.0.19'
+    //implementation 'org.postgresql:postgresql:42.2.11'
+    //implementation 'com.oracle.jdbc:ojdbc7:12.1.0.2'
+    //implementation 'com.oracle.jdbc:ojdbc10:19.3.0.0'
+    //implementation 'com.microsoft.sqlserver:mssql-jdbc:8.2.1.jre8'
+
+    // Develpment/Test dependencies
+    developmentOnly 'org.springframework.boot:spring-boot-devtools'
+    providedRuntime 'org.springframework.boot:spring-boot-starter-tomcat'
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+    testImplementation 'org.springframework.security:spring-security-test'
+    testImplementation 'junit:junit:4.13'
+
+    // Code Analysis dependencies
+    clover 'org.openclover:clover:4.4.1'
+}
+
+// Code Analysis/Report configurations
+clover { report { html = true }; testIncludes = ['**/*Test.java', '**/*Tests.java'];  targetPercentage = "${codeCoverageRequiredPercentage}%"  }
+spotbugs { ignoreFailures = true; showProgress = false }
+spotbugsMain { reports { html { enabled = true ; destination = file("$buildDir/reports/spotbugs/spotbugs.html") } } }
+tasks.withType(Pmd){ reports{ xml.enabled=true; html.enabled=true } }
+pmd { ignoreFailures = true; }
+//jacoco { toolVersion = "0.8.5" }
+//jacocoTestReport { reports { xml.enabled true; csv.enabled true } }
+
+// Catch all Gradle task to run a complete clean build
+task fullBuild {
+    dependsOn 'clean'
+    dependsOn 'test'
+    dependsOn 'check'
+    dependsOn 'cloverGenerateReport'
+    dependsOn 'bootJar'
+    dependsOn 'bootWar'
+
+    tasks.findByName('test').mustRunAfter('clean')
+    tasks.findByName('check').mustRunAfter('test')
+    tasks.findByName('spotbugsMain').mustRunAfter('test')
+    tasks.findByName('cloverGenerateReport').mustRunAfter('spotbugsMain')
+    tasks.findByName('bootJar').mustRunAfter('cloverGenerateReport')
+    //tasks.findByName('bootJar').mustRunAfter('jacocoTestReport')
+    tasks.findByName('bootWar').mustRunAfter('bootJar')
+}

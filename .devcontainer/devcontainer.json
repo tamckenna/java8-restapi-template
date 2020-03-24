@@ -1,0 +1,31 @@
+{
+    "name": "Java 8",
+    "dockerFile": "Dockerfile",
+
+    // Set *default* container specific settings.json values on container create.
+    "settings": { 
+        "terminal.integrated.shell.linux": "/bin/bash",
+        "java.home": "/opt/java/jdk",
+        "java.configuration.checkProjectSettingsExclusions": false
+    },
+
+    // Uncomment to connect as a non-root user. See https://aka.ms/vscode-remote/containers/non-root.
+    // Disabled due to mounting only as root issue with Docker
+    "remoteUser": "developer",
+    //"containerUser": "developer",
+    
+    // Use 'forwardPorts' to make a list of ports inside the container available locally.
+    "forwardPorts": [8080],
+
+    // Use 'postCreateCommand' to run commands after the container is created.
+    // "postCreateCommand": "java -version",
+    
+    // Add the IDs of extensions you want installed when the container is created.
+    "extensions": [
+        "vscjava.vscode-java-pack",
+        "redhat.vscode-xml",
+        "Pivotal.vscode-boot-dev-pack",
+        "naco-siren.gradle-language"
+    ]
+
+}
